@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BENAYAS LEULSEGED SCHOOL GRADING SYSTEM SOFTWARE</title>
+<style>
+body {margin:0; font-family:'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;}
+.page {display:none; width:100%; min-height:100vh; flex-direction:column; justify-content:center; align-items:center;}
+.page.active {display:flex;}
+.centered {text-align:center;}
+h1,h2 {text-shadow:2px 2px 10px rgba(0,0,0,0.7);}
+p,li {font-size:16px; color:#333; margin:5px 0;}
+button {padding:10px 20px; margin:10px; border:none; border-radius:8px; background:#2196F3; color:white; font-size:16px; cursor:pointer; transition:0.3s;}
+button:hover {background:#0b7dda;}
+input[type="checkbox"] {transform: scale(1.2); margin-right:10px;}
+input[type="text"], input[type="number"] {padding:8px; width:300px; border-radius:5px; border:1px solid #ccc;}
+#progressBarContainer {width:80%; height:30px; background:#ccc; border-radius:15px; margin-top:20px;}
+#progressBar {height:100%; width:0%; background:#2196F3; border-radius:15px; text-align:center; color:white; line-height:30px; font-weight:bold;}
+#calculator {display:none; margin-top:20px; background:#f5f5f5; padding:20px; border-radius:10px; box-shadow:0px 0px 10px rgba(0,0,0,0.3);}
+#calculator input {width:200px; margin:5px;}
+#calculator button {width:60px;}
+</style>
+</head>
+<body>
+
+<!-- First Page -->
+<div id="page1" class="page active" style="background:url('box.jpg') no-repeat center center/cover;">
+    <div class="centered">
+        <h1>BENAYAS LEULSEGED SCHOOL GRADING SYSTEM SOFTWARE</h1>
+        <p>This software helps you calculate total marks, average, and grading.</p>
+        <p>It allows dynamic subject input and grading system management.</p>
+        <p>You can save, edit, delete, and even take screenshots of your grading systems.</p>
+        <p>Click Next to continue the installation.</p>
+        <button onclick="goToPage('page2')">Next</button>
+        <button onclick="toggleCalculator()">Calculator</button>
+
+        <!-- Calculator -->
+        <div id="calculator">
+            <h2>Simple Calculator</h2>
+            <input type="number" id="calcNum1" placeholder="Number 1">
+            <input type="number" id="calcNum2" placeholder="Number 2">
+            <br>
+            <button onclick="calculate('+')">+</button>
+            <button onclick="calculate('-')">-</button>
+            <button onclick="calculate('*')">*</button>
+            <button onclick="calculate('/')">/</button>
+            <p id="calcResult"></p>
+        </div>
+    </div>
+</div>
+
+<!-- Page 2: Login/Register Page -->
+<div id="page2" class="page" style="background:url('er.jpg') no-repeat center center/cover;">
+    <div class="centered">
+        <h2>Login or Register</h2>
+        <input type="text" id="username" placeholder="Username (@beni.com)">
+        <input type="password" id="password" placeholder="Password">
+        <div>
+            <button onclick="registerUser()">Register</button>
+            <button onclick="loginUser()">Login</button>
+        </div>
+        <p id="loginMsg" style="color:red;"></p>
+    </div>
+</div>
+
+<!-- Page 3: Grading System -->
+<div id="page3" class="page" style="background:url('bok.jpg') no-repeat center center/cover;">
+    <div class="centered">
+        <h2>Grading System</h2>
+        <input type="text" id="subjectNameInput" placeholder="Enter Subject Name">
+        <button onclick="addSubject()">Add Subject</button>
+        <div id="subjectsList"></div>
+        <button onclick="generateMarksInputs()">Enter Marks</button>
+        <div id="marksContainer"></div>
+        <button onclick="calculateResult()">Check Result</button>
+        <div id="resultDisplay"></div>
+        <button onclick="saveGradingSystem()">Save</button>
+        <button onclick="showSavedGradingSystems()">Saved Grading Systems</button>
+        <button onclick="takeScreenshot()">Screenshot</button>
+        <div id="savedSystems"></div>
+    </div>
+</div>
+
+<script>
+let subjects = [];
+
+// Page navigation
+function goToPage(id){
+    document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+}
+
+// Toggle calculator display
+function toggleCalculator(){
+    const calc = document.getElementById('calculator');
+    calc.style.display = (calc.style.display==='none') ? 'block' : 'none';
+}
+
+// Calculator operations
+function calculate(op){
+    const n1 = parseFloat(document.getElementById('calcNum1').value);
+    const n2 = parseFloat(document.getElementById('calcNum2').value);
+    let res = '';
+    if(isNaN(n1) || isNaN(n2)){alert('Enter valid numbers'); return;}
+    switch(op){
+        case '+': res = n1+n2; break;
+        case '-': res = n1-n2; break;
+        case '*': res = n1*n2; break;
+        case '/': res = n2!==0 ? n1/n2 : 'Error'; break;
+    }
+    document.getElementById('calcResult').innerText = 'Result: ' + res;
+}
+
+// --- Login/Register functions ---
+function registerUser(){
+    const username=document.getElementById('username').value.trim();
+    const password=document.getElementById('password').value;
+    if(!username.endsWith('@beni.com')){alert('Username must end with @beni.com'); return;}
+    if(username===''||password===''){alert('Fill both fields'); return;}
+    let users=JSON.parse(localStorage.getItem('users')||'{}');
+    if(users[username]){alert('User already exists'); return;}
+    users[username]=password;
+    localStorage.setItem('users',JSON.stringify(users));
+    alert('Registered successfully');
+}
+function loginUser(){
+    const username=document.getElementById('username').value.trim();
+    const password=document.getElementById('password').value;
+    let users=JSON.parse(localStorage.getItem('users')||'{}');
+    if(users[username] && users[username]===password){
+        goToPage('page3');
+    }else{document.getElementById('loginMsg').innerText='Invalid username or password';}
+}
+
+// --- Grading System functions ---
+function addSubject(){
+    const name=document.getElementById('subjectNameInput').value.trim();
+    if(!name){alert('Enter subject name'); return;}
+    subjects.push(name);
+    document.getElementById('subjectsList').innerHTML=subjects.map((s,i)=>`${i+1}. ${s}`).join('<br>');
+    document.getElementById('subjectNameInput').value='';
+}
+function generateMarksInputs(){
+    if(subjects.length===0){alert('Add at least one subject'); return;}
+    const container=document.getElementById('marksContainer');
+    container.innerHTML='';
+    subjects.forEach(sub=>{
+        const div=document.createElement('div');
+        div.innerHTML=`${sub}: <input type='number' min='0' max='100' placeholder='Enter marks'>`;
+        container.appendChild(div);
+    });
+}
+function calculateResult(){
+    const inputs=document.querySelectorAll('#marksContainer input');
+    if(inputs.length===0){alert('Generate marks fields first'); return;}
+    let sum=0;
+    for(let input of inputs){
+        const val=parseFloat(input.value);
+        if(isNaN(val)||val<0||val>100){alert('Enter valid marks 0-100'); return;}
+        sum+=val;
+    }
+    const avg=sum/inputs.length;
+    let grade='';
+    if(avg>=100) grade='Satisfactory';
+    else if(avg>=90) grade='Excellent';
+    else if(avg>=80) grade='Very Good';
+    else if(avg>=70) grade='Good';
+    else if(avg>=60) grade='Poor';
+    else grade='Failed';
+    document.getElementById('resultDisplay').innerHTML=`Sum: ${sum.toFixed(2)}<br>Average: ${avg.toFixed(2)}<br>Grade: ${grade}`;
+}
+function saveGradingSystem(){
+    const result=document.getElementById('resultDisplay').innerHTML;
+    if(!result){alert('Calculate result first'); return;}
+    let saved=JSON.parse(localStorage.getItem('gradingSystems')||'[]');
+    saved.push({subjects:[...subjects], result});
+    localStorage.setItem('gradingSystems',JSON.stringify(saved));
+    alert('Saved successfully');
+}
+function showSavedGradingSystems(){
+    const container=document.getElementById('savedSystems');
+    let saved=JSON.parse(localStorage.getItem('gradingSystems')||'[]');
+    container.innerHTML='';
+    saved.forEach((g,i)=>{
+        const div=document.createElement('div');
+        div.innerHTML=`Grading System ${i+1}: ${g.result} <button onclick='editSystem(${i})'>Edit</button> <button onclick='deleteSystem(${i})'>Delete</button>`;
+        container.appendChild(div);
+    });
+}
+function editSystem(index){
+    let saved=JSON.parse(localStorage.getItem('gradingSystems')||'[]');
+    subjects=saved[index].subjects;
+    document.getElementById('subjectsList').innerHTML=subjects.map((s,i)=>`${i+1}. ${s}`).join('<br>');
+    generateMarksInputs();
+    saved.splice(index,1);
+    localStorage.setItem('gradingSystems',JSON.stringify(saved));
+    showSavedGradingSystems();
+}
+function deleteSystem(index){
+    let saved=JSON.parse(localStorage.getItem('gradingSystems')||'[]');
+    saved.splice(index,1);
+    localStorage.setItem('gradingSystems',JSON.stringify(saved));
+    showSavedGradingSystems();
+}
+function takeScreenshot(){
+    alert('Screenshot feature works in Electron environment with html2canvas.');
+}
+</script>
+
+</body>
+</html>
